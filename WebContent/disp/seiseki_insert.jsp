@@ -5,17 +5,24 @@
 <%@include file="menu.jsp" %>
 
 <style>
-form {
+.絞り込み {
   display: flex;
-  align-items: flex-start; /* 上揃え */
-  gap: 20px; /* セット間の余白 */
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap; /* 改行可能に */
 }
 
 .select-group {
   display: flex;
-  flex-direction: column; /* labelを上にselectを下に */
+  flex-direction: column;
+  min-width: 100px;
 }
 
+/* ボタンをフォームの横幅いっぱいに広げて下に置く */
+.button-group {
+  flex-basis: 100%;  /* 横幅100% */
+  margin-top: 10px;  /* 上の選択肢から少し余白 */
+}
 
 </style>
 
@@ -23,9 +30,9 @@ form {
   <h2 class="menu-title">成績登録</h2>
 
   <!-- 成績登録条件の選択フォーム -->
-  <form action="scoreinsert" method="get">
+  <form class="絞り込み" action="scoreinsert" method="get">
   <div class="select-group">
-    <label>入学年度：</label>
+    <label>入学年度</label>
     <select name="ent_year">
       <option value="">--選択--</option>
       <c:forEach var="year" items="${entYears}">
@@ -35,7 +42,7 @@ form {
     </div>
 
     <div class="select-group">
-    <label>クラス：</label>
+    <label>クラス</label>
     <select name="class_no">
       <option value="">--選択--</option>
       <c:forEach var="cls" items="${classNums}">
@@ -45,7 +52,7 @@ form {
     </div>
 
     <div class="select-group">
-    <label>科目：</label>
+    <label>科目</label>
     <select name="subject">
       <option value="">--選択--</option>
       <c:forEach var="subj" items="${subjects}">
@@ -55,7 +62,7 @@ form {
     </div>
 
     <div class="select-group">
-    <label>回数：</label>
+    <label>回数</label>
     <select name="exam_round">
       <option value="">--選択--</option>
       <c:forEach var="round" items="${examRounds}">
@@ -63,42 +70,51 @@ form {
       </c:forEach>
     </select>
     </div>
-
+  <div class="button-group">
     <button type="submit">表示</button>
+  </div>
   </form>
 
   <!-- 件数表示（学生リストが取得されている場合） -->
-  <c:if test="${not empty students}">
-    <div style="margin-top: 10px;">
-      対象学生：${students.size()} 名
-    </div>
+<c:if test="${not empty students}">
+  <div style="margin-top: 10px;">
+    対象学生：${students.size()} 名
+  </div>
 
-    <!-- 成績入力テーブル（この部分は後でPOST処理に拡張可） -->
-    <form action="scoreinsert" method="post">
-      <table border="1" style="margin: 10px auto; border-collapse: collapse;">
-        <thead>
+  <!-- 成績入力テーブル -->
+  <form class="scoreinsert" action="scoreinsert" method="post">
+
+    <!-- ✅ formの中に科目・回数の表示 -->
+    <c:if test="${not empty param.subject && not empty param.exam_round}">
+      <p>科目：${param.subject}（第${param.exam_round}回）</p>
+    </c:if>
+
+    <!-- 成績入力テーブル -->
+    <table border="1" style="margin: 10px auto; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th>学生番号</th>
+          <th>氏名</th>
+          <th>点数</th>
+        </tr>
+      </thead>
+      <tbody>
+        <c:forEach var="student" items="${students}">
           <tr>
-            <th>学生番号</th>
-            <th>氏名</th>
-            <th>点数</th>
+            <td>
+              ${student.no}
+              <input type="hidden" name="student_no" value="${student.no}" />
+            </td>
+            <td>${student.name}</td>
+            <td><input type="number" name="point_${student.no}" min="0" max="100" required></td>
           </tr>
-        </thead>
-        <tbody>
-          <c:forEach var="student" items="${students}">
-            <tr>
-              <td>
-                ${student.no}
-                <input type="hidden" name="student_no" value="${student.no}" />
-              </td>
-              <td>${student.name}</td>
-              <td><input type="number" name="point_${student.no}" min="0" max="100" required></td>
-            </tr>
-          </c:forEach>
-        </tbody>
-      </table>
-      <button type="submit">登録</button>
-    </form>
-  </c:if>
+        </c:forEach>
+      </tbody>
+    </table>
+
+    <button type="submit">登録</button>
+  </form>
+</c:if>
 
   <c:if test="${empty students && param.ent_year != null}">
     <div style="margin-top: 10px; color: red;">該当する学生がいません。</div>
