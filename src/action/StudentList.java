@@ -115,5 +115,6 @@ public class StudentList extends HttpServlet {
     request.setAttribute("classNums", classNums);
 
     request.getRequestDispatcher("/disp/student_list.jsp").forward(request, response);
+
   }
 }
