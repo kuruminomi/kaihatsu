@@ -105,12 +105,13 @@ public class ScoreInsert extends HttpServlet {
           }
         }
 
-        // 学生リスト
+     // 学生リスト
         if (selectedYear != null && selectedClass != null &&
             !selectedYear.isEmpty() && !selectedClass.isEmpty()) {
 
           try (PreparedStatement st = con.prepareStatement(
-              "SELECT no, name FROM STUDENT WHERE school_cd = ? AND ent_year = ? AND class_num = ? AND is_attend = true ORDER BY no")) {
+              // ⭐ class_numもSELECTする
+              "SELECT no, name, class_num FROM STUDENT WHERE school_cd = ? AND ent_year = ? AND class_num = ? AND is_attend = true ORDER BY no")) {
             st.setString(1, schoolCd);
             st.setInt(2, Integer.parseInt(selectedYear));
             st.setString(3, selectedClass);
@@ -119,6 +120,7 @@ public class ScoreInsert extends HttpServlet {
                 Student s = new Student();
                 s.setNo(rs.getString("no"));
                 s.setName(rs.getString("name"));
+                s.setClass_num(rs.getString("class_num")); // ⭐ 追加
                 students.add(s);
 
                 // 既存点数

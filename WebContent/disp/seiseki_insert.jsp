@@ -93,6 +93,7 @@
           <tr>
             <th>学生番号</th>
             <th>氏名</th>
+            <th>クラス</th>
             <th>点数</th>
           </tr>
         </thead>
@@ -104,6 +105,7 @@
                 <input type="hidden" name="student_no" value="${student.no}" />
               </td>
               <td>${student.name}</td>
+              <td>${student.class_num}</td>
               <td>
               <input type="number" name="point_${student.no}" min="0" max="100"
                value="${pointMap[student.no]}" required>
