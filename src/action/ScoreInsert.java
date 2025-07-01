@@ -6,7 +6,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -22,6 +24,7 @@ import dao.DAO;
 @WebServlet("/action/scoreinsert")
 public class ScoreInsert extends HttpServlet {
 
+  @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
 
@@ -39,10 +42,12 @@ public class ScoreInsert extends HttpServlet {
     List<String> subjectNames = new ArrayList<>();
     List<Integer> testRounds = new ArrayList<>();
     List<Student> students = new ArrayList<>();
+    Map<String, Integer> pointMap = new HashMap<>(); // ⭐ 追加
 
     String selectedYear = request.getParameter("ent_year");
     String selectedClass = request.getParameter("class_no");
     String selectedSubject = request.getParameter("subject");
+    String selectedExamRound = request.getParameter("exam_round");
 
     try {
       DAO dao = new DAO();
@@ -81,7 +86,7 @@ public class ScoreInsert extends HttpServlet {
           }
         }
 
-        // 回数（最大＋1まで）
+        // 回数
         int maxRound = 0;
         try (PreparedStatement st = con.prepareStatement(
             "SELECT MAX(no) FROM TEST WHERE school_cd = ?")) {
@@ -92,8 +97,13 @@ public class ScoreInsert extends HttpServlet {
             }
           }
         }
-        if (maxRound == 0) testRounds.add(1);
-        else for (int i = 1; i <= maxRound + 1; i++) testRounds.add(i);
+        if (maxRound == 0) {
+          testRounds.add(1);
+        } else {
+          for (int i = 1; i <= maxRound + 1; i++) {
+            testRounds.add(i);
+          }
+        }
 
         // 学生リスト
         if (selectedYear != null && selectedClass != null &&
@@ -110,26 +120,58 @@ public class ScoreInsert extends HttpServlet {
                 s.setNo(rs.getString("no"));
                 s.setName(rs.getString("name"));
                 students.add(s);
+
+                // 既存点数
+                if (selectedSubject != null && selectedExamRound != null &&
+                    !selectedSubject.isEmpty() && !selectedExamRound.isEmpty()) {
+
+                  String subjectCd = null;
+                  try (PreparedStatement stSub = con.prepareStatement(
+                      "SELECT cd FROM SUBJECT WHERE school_cd = ? AND name = ?")) {
+                    stSub.setString(1, schoolCd);
+                    stSub.setString(2, selectedSubject);
+                    try (ResultSet rsSub = stSub.executeQuery()) {
+                      if (rsSub.next()) {
+                        subjectCd = rsSub.getString("cd");
+                      }
+                    }
+                  }
+
+                  if (subjectCd != null) {
+                    try (PreparedStatement stPoint = con.prepareStatement(
+                        "SELECT point FROM TEST WHERE student_no = ? AND subject_cd = ? AND school_cd = ? AND no = ?")) {
+                      stPoint.setString(1, s.getNo());
+                      stPoint.setString(2, subjectCd);
+                      stPoint.setString(3, schoolCd);
+                      stPoint.setInt(4, Integer.parseInt(selectedExamRound));
+                      try (ResultSet rsPoint = stPoint.executeQuery()) {
+                        if (rsPoint.next()) {
+                          pointMap.put(s.getNo(), rsPoint.getInt("point"));
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
           }
         }
-
       }
     } catch (Exception e) {
       throw new ServletException(e);
     }
 
-    // フォワード先へ渡す
     request.setAttribute("entYears", entYears);
     request.setAttribute("classNums", classNums);
     request.setAttribute("subjects", subjectNames);
     request.setAttribute("examRounds", testRounds);
     request.setAttribute("students", students);
+    request.setAttribute("pointMap", pointMap); // ⭐ JSPで使用
 
     request.getRequestDispatcher("/disp/seiseki_insert.jsp").forward(request, response);
   }
 
+  @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
 
@@ -146,11 +188,13 @@ public class ScoreInsert extends HttpServlet {
     int examRound = Integer.parseInt(request.getParameter("exam_round"));
     String classNum = request.getParameter("class_no");
 
+    String message = "";
+
     try {
       DAO dao = new DAO();
       try (Connection con = dao.getConnection()) {
 
-        // 科目名 → CD取得
+        // 科目CD取得
         String subjectCd = null;
         try (PreparedStatement st = con.prepareStatement(
             "SELECT cd FROM SUBJECT WHERE school_cd = ? AND name = ?")) {
@@ -163,37 +207,71 @@ public class ScoreInsert extends HttpServlet {
           }
         }
 
-        // 学生ごとに点数登録
-        Enumeration<String> paramNames = request.getParameterNames();
-        while (paramNames.hasMoreElements()) {
-          String param = paramNames.nextElement();
+        if (subjectCd == null) {
+          throw new Exception("科目が見つかりませんでした。");
+        }
+
+        // 学生ごとにINSERT or UPDATE
+        int insertCount = 0;
+        int updateCount = 0;
+
+        for (Enumeration<String> e = request.getParameterNames(); e.hasMoreElements();) {
+          String param = e.nextElement();
           if (param.startsWith("point_")) {
-            String studentNo = param.substring(6); // 例：point_000 → 000
+            String studentNo = param.substring(6);
             int point = Integer.parseInt(request.getParameter(param));
 
-            // INSERT処理
+            // 既存確認
+            boolean exists = false;
             try (PreparedStatement st = con.prepareStatement(
-                "INSERT INTO TEST (student_no, subject_cd, school_cd, no, point, class_num) VALUES (?, ?, ?, ?, ?, ?)")) {
+                "SELECT COUNT(*) FROM TEST WHERE student_no = ? AND subject_cd = ? AND school_cd = ? AND no = ?")) {
               st.setString(1, studentNo);
               st.setString(2, subjectCd);
               st.setString(3, schoolCd);
               st.setInt(4, examRound);
-              st.setInt(5, point);
-              st.setString(6, classNum);
-              st.executeUpdate();
+              try (ResultSet rs = st.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                  exists = true;
+                }
+              }
+            }
+
+            if (exists) {
+              try (PreparedStatement st = con.prepareStatement(
+                  "UPDATE TEST SET point = ? WHERE student_no = ? AND subject_cd = ? AND school_cd = ? AND no = ?")) {
+                st.setInt(1, point);
+                st.setString(2, studentNo);
+                st.setString(3, subjectCd);
+                st.setString(4, schoolCd);
+                st.setInt(5, examRound);
+                st.executeUpdate();
+                updateCount++;
+              }
+            } else {
+              try (PreparedStatement st = con.prepareStatement(
+                  "INSERT INTO TEST (student_no, subject_cd, school_cd, no, point, class_num) VALUES (?, ?, ?, ?, ?, ?)")) {
+                st.setString(1, studentNo);
+                st.setString(2, subjectCd);
+                st.setString(3, schoolCd);
+                st.setInt(4, examRound);
+                st.setInt(5, point);
+                st.setString(6, classNum);
+                st.executeUpdate();
+                insertCount++;
+              }
             }
           }
         }
 
+        message = String.format("登録が完了しました。新規登録：%d件 / 更新：%d件", insertCount, updateCount);
       }
+
     } catch (Exception e) {
-      throw new ServletException(e);
+      e.printStackTrace();
+      message = "登録中にエラーが発生しました。<br>" + e.getMessage();
     }
 
-    // 登録後はGETにリダイレクト
-    response.sendRedirect("scoreinsert?ent_year=" + request.getParameter("ent_year")
-        + "&class_no=" + classNum
-        + "&subject=" + subjectName
-        + "&exam_round=" + examRound);
+    request.setAttribute("message", message);
+    request.getRequestDispatcher("/disp/seiseki_insert_result.jsp").forward(request, response);
   }
 }
