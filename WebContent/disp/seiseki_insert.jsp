@@ -32,7 +32,7 @@
   <form class="絞り込み" action="scoreinsert" method="get">
     <div class="select-group">
       <label>入学年度：</label>
-      <select name="ent_year">
+      <select name="ent_year" required>
         <option value="">--選択--</option>
         <c:forEach var="year" items="${entYears}">
           <option value="${year}" <c:if test="${param.ent_year == year}">selected</c:if>>${year}</option>
@@ -41,7 +41,7 @@
     </div>
     <div class="select-group">
       <label>クラス：</label>
-      <select name="class_no">
+      <select name="class_no" required>
         <option value="">--選択--</option>
         <c:forEach var="cls" items="${classNums}">
           <option value="${cls}" <c:if test="${param.class_no == cls}">selected</c:if>>${cls}</option>
@@ -50,7 +50,7 @@
     </div>
     <div class="select-group">
       <label>科目：</label>
-      <select name="subject">
+      <select name="subject" required>
         <option value="">--選択--</option>
         <c:forEach var="subj" items="${subjects}">
           <option value="${subj}" <c:if test="${param.subject == subj}">selected</c:if>>${subj}</option>
@@ -59,7 +59,7 @@
     </div>
     <div class="select-group">
       <label>回数：</label>
-      <select name="exam_round">
+      <select name="exam_round" required>
         <option value="">--選択--</option>
         <c:forEach var="round" items="${examRounds}">
           <option value="${round}" <c:if test="${param.exam_round == round}">selected</c:if>>第${round}回</option>
@@ -73,12 +73,11 @@
 
   <!-- 件数表示 -->
   <c:if test="${not empty students}">
+    <!-- 成績入力フォーム -->
+    <form action="scoreinsert" method="post">
     <div style="margin-top: 10px;">
       対象学生：${students.size()} 名
     </div>
-
-    <!-- 成績入力フォーム -->
-    <form action="scoreinsert" method="post">
     <!-- ✅ formの中に科目・回数の表示 -->
     <c:if test="${not empty param.subject && not empty param.exam_round}">
       <p>科目：${param.subject}（第${param.exam_round}回）</p>
