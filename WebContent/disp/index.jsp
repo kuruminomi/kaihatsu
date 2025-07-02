@@ -25,7 +25,7 @@
     </ul>
     <ul class="card subject">
       <li style="margin-bottom: 15px;">
-        <a href="<%= request.getContextPath() %>/kamoku/kamoku_list.jsp">科目管理</a>
+        <a href="<%= request.getContextPath() %>/action/subjectlist">科目管理</a>
       </li>
     </ul>
    </div>
