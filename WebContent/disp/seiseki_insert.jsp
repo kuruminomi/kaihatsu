@@ -16,7 +16,8 @@
 .select-group {
   display: flex;
   flex-direction: column;
-  min-width: 100px;
+  width: 80px;
+  margin: 0 5px;
 }
 
 /* ボタンをフォームの横幅いっぱいに広げて下に置く */
@@ -30,9 +31,9 @@
   <h2 class="menu-title">成績登録</h2>
 
   <!-- 絞り込みフォーム -->
-  <form class="絞り込み" action="scoreinsert" method="get">
+  <form class="絞り込み" action="scoreinsert" method="get" style="justify-content: center;">
     <div class="select-group">
-      <label>入学年度：</label>
+      <label>入学年度</label>
       <select name="ent_year" required>
         <option value="">--選択--</option>
         <c:forEach var="year" items="${entYears}">
@@ -41,7 +42,7 @@
       </select>
     </div>
     <div class="select-group">
-      <label>クラス：</label>
+      <label>クラス</label>
       <select name="class_no" required>
         <option value="">--選択--</option>
         <c:forEach var="cls" items="${classNums}">
@@ -50,7 +51,7 @@
       </select>
     </div>
     <div class="select-group">
-      <label>科目：</label>
+      <label>科目</label>
       <select name="subject" required>
         <option value="">--選択--</option>
         <c:forEach var="subj" items="${subjects}">
@@ -59,7 +60,7 @@
       </select>
     </div>
     <div class="select-group">
-      <label>回数：</label>
+      <label>回数</label>
       <select name="exam_round" required>
         <option value="">--選択--</option>
         <c:forEach var="round" items="${examRounds}">

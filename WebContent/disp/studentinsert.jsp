@@ -32,10 +32,10 @@
     <label>在学中</label><br>
     <input type="radio" name="is_attend" value="1" checked> 在学中
     <input type="radio" name="is_attend" value="0"> 卒業<br><br>
-
-    <input type="submit" value="登録して終了">
-    <br><br>
-    <a href="<%= request.getContextPath() %>/action/studentlist">戻る</a>
+    <div class="button-row">
+    <a href="<%= request.getContextPath() %>/action/studentlist"><button type="button" class="back">戻る</button></a>
+    <button type="submit">登録</button>
+    </div>
   </form>
 </div>
 
