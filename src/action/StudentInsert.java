@@ -15,6 +15,7 @@ import javax.sql.DataSource;
 
 import bean.Teacher;  // ログインユーザーのモデルクラス（必要に応じて変更）
 
+
 @WebServlet("/action/studentinsert")
 public class StudentInsert extends HttpServlet {
   protected void doPost(HttpServletRequest request, HttpServletResponse response)

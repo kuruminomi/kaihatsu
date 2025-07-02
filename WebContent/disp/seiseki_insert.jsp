@@ -12,6 +12,7 @@
   flex-wrap: wrap; /* 改行可能に */
 }
 
+
 .select-group {
   display: flex;
   flex-direction: column;

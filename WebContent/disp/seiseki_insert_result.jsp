@@ -10,4 +10,5 @@
   <a href="<%= request.getContextPath() %>/action/scoreinsert">成績登録に戻る</a>
 </div>
 
+
 <%@include file="../footer.html" %>

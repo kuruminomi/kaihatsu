@@ -159,6 +159,7 @@ public class ScoreInsert extends HttpServlet {
           }
         }
       }
+
     } catch (Exception e) {
       throw new ServletException(e);
     }
