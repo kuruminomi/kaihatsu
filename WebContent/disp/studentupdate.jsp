@@ -37,11 +37,11 @@
     <label></label><br>
     <input type="checkbox" name="is_attend" value="1" <c:if test="${student.is_attend}">checked</c:if>> 在学中<br><br>
 
+    <div class="button-row">
     <!-- ボタン -->
-    <input type="submit" value="変更">
-    <br><br>
-    <a href="<%= request.getContextPath() %>/action/studentlist">戻る</a>
-
+    <a href="<%= request.getContextPath() %>/action/studentlist"><button type="button" class="back">戻る</button></a>
+    <button type="submit">更新</button>
+    </div>
   </form>
 </div>
 
