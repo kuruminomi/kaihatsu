@@ -31,6 +31,8 @@ public class SubjectInsert extends HttpServlet {
     String cd = request.getParameter("cd");
     String name = request.getParameter("name");
 
+    String message = "";
+
     try {
       DAO dao = new DAO();
       try (Connection con = dao.getConnection()) {
@@ -43,9 +45,11 @@ public class SubjectInsert extends HttpServlet {
         }
       }
     } catch (Exception e) {
-      throw new ServletException(e);
-    }
+        e.printStackTrace();
+        message = "登録中にエラーが発生しました。<br>" + e.getMessage();
+      }
 
-    response.sendRedirect("subjectlist");
+      request.setAttribute("message", message);
+      request.getRequestDispatcher("/disp/subject_result.jsp").forward(request, response);
+    }
   }
-}
