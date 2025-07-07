@@ -42,6 +42,7 @@ public class SubjectUpdate extends HttpServlet {
           st.setString(2, schoolCd);
           st.setString(3, cd);
           st.executeUpdate();
+          message = "科目を更新しました。";
         }
       }
     } catch (Exception e) {
