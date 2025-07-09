@@ -222,7 +222,9 @@ public class ScoreInsert extends HttpServlet {
           String param = e.nextElement();
           if (param.startsWith("point_")) {
             String studentNo = param.substring(6);
-            int point = Integer.parseInt(request.getParameter(param));
+            String pointStr = request.getParameter(param);
+            int point = (pointStr == null || pointStr.trim().isEmpty()) ? 0 : Integer.parseInt(pointStr.trim());
+
 
             // 既存確認
             boolean exists = false;

@@ -110,7 +110,7 @@
               <td>${student.class_num}</td>
               <td>
               <input type="number" name="point_${student.no}" min="0" max="100"
-               value="${pointMap[student.no]}" required>
+               value="${pointMap[student.no]}">
               </td>
 
             </tr>
